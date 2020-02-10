@@ -41,12 +41,15 @@ for i in sys.argv[1:]:
         video_arg = True
     elif "-n=" in i[:3]:
         name_arg = i[3:]
-    elif "-h" in i[:2]:
-        print("help text")
+    elif ("-h" in i[:2]):
+        f = open('help.txt', 'r')
+        file_contents = f.read()
+        print (file_contents)
+        f.close()
         exit()
     else:
-        print("Unrecognized Command")
+        print('Unrecognized Command: Enter -h as an arg to see help text' )
         exit()
 
-test_select(path_arg,audio_arg,video_arg,name_arg)
+test_selecpt(path_arg,audio_arg,video_arg,name_arg)
 
