@@ -5,15 +5,20 @@ import shutil
 import subprocess
 import re
 import sys
+import time
 
-path_arg, audio_arg, video_arg, name_arg = None,None,None,""
+path_arg,audio_arg,video_arg,name_arg,screen_arg=None,None,None,"",-1
 
 def test_launch(path,name):
-    command = ["vlc", f'--video-title=multijack_{name}', f'{path}/{name}', "-I dummy"] 
+    command = ["vlc", f'--video-title=multiplayer_{name}', f'{path}/{name}', "-I", "dummy"] 
     print(command)
     process = subprocess.Popen(command, stdout=subprocess.PIPE)
-    output, error = process.communicate()
 
+    wmctrl_output = "."
+    while(f"multiplayer_{name}" not in wmctrl_output):
+        print(f"multiplayer_{name}",wmctrl_output)
+        time.sleep(1)
+        wmctrl_output = str(subprocess.check_output(["wmctrl","-l"]))
 
 def test_select(path,a,v,n):
     if path_arg == None:
@@ -29,8 +34,12 @@ def test_select(path,a,v,n):
     pattern = "|".join(pattern_list)
     final_list = [x for i,x in enumerate(file_list) if ((re.search(pattern, x)) and (n.lower() in x.lower()))]
     print(final_list)
-    rando = choice(final_list)
-    test_launch(path,rando)
+    choice_file = choice(final_list)
+    return choice_file
+
+
+def test_window(name,s):
+    pass
 
 for i in sys.argv[1:]:
     if "-p=" in i[:3]:
@@ -51,5 +60,11 @@ for i in sys.argv[1:]:
         print('Unrecognized Command: Enter -h as an arg to see help text' )
         exit()
 
-test_selecpt(path_arg,audio_arg,video_arg,name_arg)
+choice_file = test_select(path_arg,audio_arg,video_arg,name_arg)
+test_launch(path_arg, choice_file)
 
+print(555*"*")
+
+if screen_arg >= 0:
+    test_window(choice_file,screen_arg)
+exit(1)
