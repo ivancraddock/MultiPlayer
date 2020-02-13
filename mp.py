@@ -7,16 +7,17 @@ import re
 import sys
 import time
 
+
 path_arg,audio_arg,video_arg,name_arg,screen_arg=None,None,None,"",-1
 
 def test_launch(path,name):
-    command = ["vlc", f'--video-title=multiplayer_{name}', f'{path}/{name}', "-I", "dummy"] 
+    command = ["vlc", f'--video-title=multiplayer_{screen_arg}', f'{path}/{name}', "-I", "dummy"] 
     print(command)
     process = subprocess.Popen(command, stdout=subprocess.PIPE)
 
-    wmctrl_output = "."
-    while(f"multiplayer_{name}" not in wmctrl_output):
-        print(f"multiplayer_{name}",wmctrl_output)
+    wmctrl_output = ""
+    while(f"multiplayer_{screen_arg}" not in wmctrl_output):
+        print(f"multiplayer_{screen_arg}",wmctrl_output)
         time.sleep(1)
         wmctrl_output = str(subprocess.check_output(["wmctrl","-l"]))
 
@@ -39,7 +40,23 @@ def test_select(path,a,v,n):
 
 
 def test_window(name,s):
-    pass
+    command_1 = ['xrandr']
+    command_2 = ['grep', '*']
+    p = subprocess.Popen(command_1, stdout=subprocess.PIPE)
+    p2 = subprocess.Popen(command_2, stdin=p.stdout, stdout=subprocess.PIPE)
+    p.stdout.close()
+    resolution_string, junk = p2.communicate()
+    resolution = resolution_string.split()[0]
+    width, height = str(resolution).strip("b'").split('x')
+    print(width,height)
+
+    x_window, x_offset = (int(width) // 2 ) - 1, (int(width) // 2) + 11
+    y_window, y_offset = (int(height) //2 ) - 29 , (int(height) // 2) + 64
+    command_3 = ["wmctrl","-r","multiplayer_" + str(s), "-e"]
+    if s == 4:
+        command_3 += [f"0,0,0,{x_window},{y_window}"]
+        print(command_3)
+        process_3 = subprocess.Popen(command_3, stdout=subprocess.PIPE)
 
 for i in sys.argv[1:]:
     if "-p=" in i[:3]:
@@ -56,6 +73,13 @@ for i in sys.argv[1:]:
         print (file_contents)
         f.close()
         exit()
+    elif ("-s=" in i[:3]):
+        print(i[3])
+        if i[3].isdigit():
+            screen_arg = int(i[3])
+        else:
+            print("Unrecognized argument for screen position")
+            exit(1)
     else:
         print('Unrecognized Command: Enter -h as an arg to see help text' )
         exit()
@@ -63,7 +87,8 @@ for i in sys.argv[1:]:
 choice_file = test_select(path_arg,audio_arg,video_arg,name_arg)
 test_launch(path_arg, choice_file)
 
-print(555*"*")
+
+print(555*"*")## test string to detect if EoF is reached
 
 if screen_arg >= 0:
     test_window(choice_file,screen_arg)
