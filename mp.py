@@ -11,13 +11,17 @@ import time
 path_arg,audio_arg,video_arg,name_arg,screen_arg=None,None,None,"",-1
 
 def test_launch(path,name):
-    command = ["vlc", f'--video-title=multiplayer_{screen_arg}', f'{path}/{name}', "-I", "dummy"] 
+    s_name = name
+    if screen_arg >= 0:
+        s_name = str(screen_arg) + "_" + name
+
+    command = ["vlc", f'--video-title=multiplayer_{s_name}', f'{path}/{name}', "-I", "dummy"] 
     print(command)
     process = subprocess.Popen(command, stdout=subprocess.PIPE)
 
     wmctrl_output = ""
-    while(f"multiplayer_{screen_arg}" not in wmctrl_output):
-        print(f"multiplayer_{screen_arg}",wmctrl_output)
+    while(f"multiplayer_{s_name}" not in wmctrl_output):
+        print(f"multiplayer_{s_name}",wmctrl_output)
         time.sleep(1)
         wmctrl_output = str(subprocess.check_output(["wmctrl","-l"]))
 
@@ -31,7 +35,7 @@ def test_select(path,a,v,n):
     if a == True:
         pattern_list += [".mp3"]
     if v == True:
-        pattern_list += [".avi$",".mov$",".mp4$"]
+        pattern_list += [".avi$",".mov$",".mp4$",".flv$",".wmv$"]
     pattern = "|".join(pattern_list)
     final_list = [x for i,x in enumerate(file_list) if ((re.search(pattern, x)) and (n.lower() in x.lower()))]
     print(final_list)
@@ -48,15 +52,20 @@ def test_window(name,s):
     resolution_string, junk = p2.communicate()
     resolution = resolution_string.split()[0]
     width, height = str(resolution).strip("b'").split('x')
-    print(width,height)
-
     x_window, x_offset = (int(width) // 2 ) - 1, (int(width) // 2) + 11
-    y_window, y_offset = (int(height) //2 ) - 29 , (int(height) // 2) + 64
+    y_window, y_offset = (int(height) //2 ) - 35 , (int(height) // 2) + 64
     command_3 = ["wmctrl","-r","multiplayer_" + str(s), "-e"]
     if s == 4:
         command_3 += [f"0,0,0,{x_window},{y_window}"]
-        print(command_3)
-        process_3 = subprocess.Popen(command_3, stdout=subprocess.PIPE)
+    elif s == 5:
+        command_3 += [f"0,{x_offset},0,{x_window},{y_window}"]
+    elif s == 6:
+        command_3 += [f"0,0,{y_offset},{x_window},{y_window}"]
+    elif s == 7:
+        command_3 += [f"0,{x_offset},{y_offset},{x_window},{y_window}"]
+
+    process_3 = subprocess.Popen(command_3, stdout=subprocess.PIPE)
+        
 
 for i in sys.argv[1:]:
     if "-p=" in i[:3]:
@@ -86,9 +95,6 @@ for i in sys.argv[1:]:
 
 choice_file = test_select(path_arg,audio_arg,video_arg,name_arg)
 test_launch(path_arg, choice_file)
-
-
-print(555*"*")## test string to detect if EoF is reached
 
 if screen_arg >= 0:
     test_window(choice_file,screen_arg)
