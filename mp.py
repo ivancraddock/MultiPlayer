@@ -66,36 +66,36 @@ def test_window(name,s):
 
     process_3 = subprocess.Popen(command_3, stdout=subprocess.PIPE)
         
-
-for i in sys.argv[1:]:
-    if "-p=" in i[:3]:
-        path_arg = i[3:]
-    elif "-a" in i[:2]:
-        audio_arg = True
-    elif "-v" in i[:2]:
-        video_arg = True
-    elif "-n=" in i[:3]:
-        name_arg = i[3:]
-    elif ("-h" in i[:2]):
-        f = open('help.txt', 'r')
-        file_contents = f.read()
-        print (file_contents)
-        f.close()
-        exit()
-    elif ("-s=" in i[:3]):
-        print(i[3])
-        if i[3].isdigit():
-            screen_arg = int(i[3])
+if __name__ == "__main__":
+    for i in sys.argv[1:]:
+        if "-p=" in i[:3]:
+            path_arg = i[3:]
+        elif "-a" in i[:2]:
+            audio_arg = True
+        elif "-v" in i[:2]:
+            video_arg = True
+        elif "-n=" in i[:3]:
+            name_arg = i[3:]
+        elif ("-h" in i[:2]):
+            f = open('help.txt', 'r')
+            file_contents = f.read()
+            print (file_contents)
+            f.close()
+            exit()
+        elif ("-s=" in i[:3]):
+            print(i[3])
+            if i[3].isdigit():
+                screen_arg = int(i[3])
+            else:
+                print("Unrecognized argument for screen position")
+                exit(1)
         else:
-            print("Unrecognized argument for screen position")
-            exit(1)
-    else:
-        print('Unrecognized Command: Enter -h as an arg to see help text' )
-        exit()
+            print('Unrecognized Command: Enter -h as an arg to see help text' )
+            exit()
 
-choice_file = test_select(path_arg,audio_arg,video_arg,name_arg)
-test_launch(path_arg, choice_file)
+    choice_file = test_select(path_arg,audio_arg,video_arg,name_arg)
+    test_launch(path_arg, choice_file)
 
-if screen_arg >= 0:
-    test_window(choice_file,screen_arg)
-exit(1)
+    if screen_arg >= 0:
+        test_window(choice_file,screen_arg)
+    exit(1)
