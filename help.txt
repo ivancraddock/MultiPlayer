@@ -1,6 +1,6 @@
 MULTIPLAYER: A CLI launcher for VLC player with several options for random file selection
 
-ARGS: python3 mp.py [-h] [-p=<path>] [-n=<filename>] [-v] [-a] [-s=<screen>]
+ARGS: python3 mp.py [-h] [-p=<path>] [-n=<filename>] [-s=<screen>]
 
     COMMAND             SUMMARY
 
@@ -10,11 +10,6 @@ ARGS: python3 mp.py [-h] [-p=<path>] [-n=<filename>] [-v] [-a] [-s=<screen>]
 
     [-n=<filename>]     Name: Sets a filter for files with a specific string in their filename. MultiPlayer will only select files with the given <filename> string present somewhere in their filename.
 
-    [-v]                Video: MultiPlayer will only select video files from known filetypes
-
-    [-a]                Audio: MultiPlayer will only select audio files from known filetypes
-
-    NOTE: if -a and -v are both present (or absent) as args, MultiPlayer will select from all known filetypes
 
     [-s=<screen>]       Screen Position: MultiPlayer will fit its VLC instance to a given screen position and size. If absent, MultiPlayer will open files to their default size in the top left corner of the screen. Please see the table below for screen positions.
 

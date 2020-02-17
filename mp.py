@@ -30,14 +30,15 @@ def test_select(p=None,n=""):
     return choice_file
 
 def test_launch(p,n):
+    window_name = n
     if screen_arg >= 0:
-        n = str(screen_arg) + "_" + n
-    command = ["vlc", f'--video-title=multiplayer_{n}', f'{p}/{n}', "-I", "dummy"] 
+        window_name = str(screen_arg) + "_" + n
+    command = ["vlc", f'--video-title=multiplayer_{window_name}', f'{p}/{n}', "-I", "dummy"] 
     print(command)
     process = subprocess.Popen(command, stdout=subprocess.PIPE)
     wmctrl_output = ""
-    while(f"multiplayer_{n}" not in wmctrl_output):
-        print(f"multiplayer_{n}",wmctrl_output)
+    while(f"multiplayer_{window_name}" not in wmctrl_output):
+        print(f"multiplayer_{window_name}",wmctrl_output)
         time.sleep(1)
         wmctrl_output = str(subprocess.check_output(["wmctrl","-l"]))
 
@@ -50,17 +51,29 @@ def test_window(s):
     resolution_string, junk = p2.communicate()
     resolution = resolution_string.split()[0]
     width, height = str(resolution).strip("b'").split('x')
-    x_window, x_offset = (int(width) // 2 ) - 1, (int(width) // 2) + 11
-    y_window, y_offset = (int(height) //2 ) - 35 , (int(height) // 2) + 64
+
     command_3 = ["wmctrl","-r","multiplayer_" + str(s), "-e"]
-    if s == 4:
-        command_3 += [f"0,0,0,{x_window},{y_window}"]
+    #Offset values (added/subtracted from each _window and _pos variable) may need to be manually tweaked
+    x_window, x_pos = (int(width) // 2 ) - 1, (int(width) // 2) + 11
+    y_window, y_pos = (int(height) //2 ) - 35 , (int(height) // 2) - 5
+    if s == 0:
+        command_3 += [f"0,0,0,{(x_window) * 2},{(y_window) * 2}"]
+    elif s == 1:
+        command_3 += [f"0,0,0,{(x_window) * 2},{y_window}"]
+    elif s == 2:
+        command_3 += [f"0,0,{y_pos},{(x_window) * 2},{y_window}"]
+    elif s == 3:
+        command_3 += [f"0,0,0,{(x_window)},{y_window * 2}"]
+    elif s == 4:
+        command_3 += [f"0,{x_pos},0,{(x_window)},{y_window * 2}"]
     elif s == 5:
-        command_3 += [f"0,{x_offset},0,{x_window},{y_window}"]
+        command_3 += [f"0,0,0,{x_window},{y_window}"]
     elif s == 6:
-        command_3 += [f"0,0,{y_offset},{x_window},{y_window}"]
+        command_3 += [f"0,{x_pos},0,{x_window},{y_window}"]
     elif s == 7:
-        command_3 += [f"0,{x_offset},{y_offset},{x_window},{y_window}"]
+        command_3 += [f"0,0,{y_pos},{x_window},{y_window}"]
+    elif s == 8:
+        command_3 += [f"0,{x_pos},{y_pos},{x_window},{y_window}"]
 
     process_3 = subprocess.Popen(command_3, stdout=subprocess.PIPE)
         
@@ -84,14 +97,14 @@ if __name__ == "__main__":
             file_contents = f.read()
             print (file_contents)
             f.close()
-            exit()
+            exit(1)
         elif ("-s=" in i[:3]):
             print(i[3])
             if i[3].isdigit():
                 screen_arg = int(i[3])
             else:
                 print("Unrecognized argument for screen position")
-                exit(1)
+                exit(0)
         else:
             print('Unrecognized Command: Enter -h as an arg to see help text' )
             exit(0)
