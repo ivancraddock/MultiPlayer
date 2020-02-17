@@ -10,6 +10,19 @@ import time
 
 path_arg,audio_arg,video_arg,name_arg,screen_arg=None,None,None,"",-1
 
+
+def dependancy_check():
+
+    vlc_check = shutil.which("vlc")
+    if vlc_check == None:
+        print("VLC NOT INSTALLED. Please visit videolan.org for the latest download")
+        exit(0)
+    wmctrl_check = shutil.which("wmctrl")
+    if wmctrl_check == None:
+        print("WMCTRL NOT INSTALLED. Please install using your packet manager")
+        exit(0)
+
+
 def test_launch(path,name):
     s_name = name
     if screen_arg >= 0:
@@ -67,6 +80,9 @@ def test_window(name,s):
     process_3 = subprocess.Popen(command_3, stdout=subprocess.PIPE)
         
 if __name__ == "__main__":
+
+    dependancy_check()
+
     for i in sys.argv[1:]:
         if "-p=" in i[:3]:
             path_arg = i[3:]
@@ -91,7 +107,7 @@ if __name__ == "__main__":
                 exit(1)
         else:
             print('Unrecognized Command: Enter -h as an arg to see help text' )
-            exit()
+            exit(0)
 
     choice_file = test_select(path_arg,audio_arg,video_arg,name_arg)
     test_launch(path_arg, choice_file)
