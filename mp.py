@@ -8,9 +8,6 @@ import sys
 import time
 
 
-path_arg,audio_arg,video_arg,name_arg,screen_arg=None,None,None,"",-1
-
-
 def dependancy_check():
 
     vlc_check = shutil.which("vlc")
@@ -22,41 +19,29 @@ def dependancy_check():
         print("WMCTRL NOT INSTALLED. Please install using your packet manager")
         exit(0)
 
-
-def test_launch(path,name):
-    s_name = name
-    if screen_arg >= 0:
-        s_name = str(screen_arg) + "_" + name
-
-    command = ["vlc", f'--video-title=multiplayer_{s_name}', f'{path}/{name}', "-I", "dummy"] 
-    print(command)
-    process = subprocess.Popen(command, stdout=subprocess.PIPE)
-
-    wmctrl_output = ""
-    while(f"multiplayer_{s_name}" not in wmctrl_output):
-        print(f"multiplayer_{s_name}",wmctrl_output)
-        time.sleep(1)
-        wmctrl_output = str(subprocess.check_output(["wmctrl","-l"]))
-
-def test_select(path,a,v,n):
+def test_select(p=None,n=""):
     if path_arg == None:
-        path = (os.path.dirname(os.path.realpath(__file__)))
-    file_list = os.listdir(path)
-    pattern_list = []
-    if (a == None) and (v == None):
-        a = v = True
-    if a == True:
-        pattern_list += [".mp3"]
-    if v == True:
-        pattern_list += [".avi$",".mov$",".mp4$",".flv$",".wmv$"]
-    pattern = "|".join(pattern_list)
+        p = (os.path.dirname(os.path.realpath(__file__)))
+    file_list = os.listdir(p)
+    pattern = ".avi$|.mov$|.mp4$|.flv$|.wmv$"
+
     final_list = [x for i,x in enumerate(file_list) if ((re.search(pattern, x)) and (n.lower() in x.lower()))]
-    print(final_list)
     choice_file = choice(final_list)
     return choice_file
 
+def test_launch(p,n):
+    if screen_arg >= 0:
+        n = str(screen_arg) + "_" + n
+    command = ["vlc", f'--video-title=multiplayer_{n}', f'{p}/{n}', "-I", "dummy"] 
+    print(command)
+    process = subprocess.Popen(command, stdout=subprocess.PIPE)
+    wmctrl_output = ""
+    while(f"multiplayer_{n}" not in wmctrl_output):
+        print(f"multiplayer_{n}",wmctrl_output)
+        time.sleep(1)
+        wmctrl_output = str(subprocess.check_output(["wmctrl","-l"]))
 
-def test_window(name,s):
+def test_window(s):
     command_1 = ['xrandr']
     command_2 = ['grep', '*']
     p = subprocess.Popen(command_1, stdout=subprocess.PIPE)
@@ -82,6 +67,8 @@ def test_window(name,s):
 if __name__ == "__main__":
 
     dependancy_check()
+
+    path_arg,name_arg,screen_arg=None,"",-1
 
     for i in sys.argv[1:]:
         if "-p=" in i[:3]:
@@ -109,9 +96,9 @@ if __name__ == "__main__":
             print('Unrecognized Command: Enter -h as an arg to see help text' )
             exit(0)
 
-    choice_file = test_select(path_arg,audio_arg,video_arg,name_arg)
+    choice_file = test_select(path_arg,name_arg)
     test_launch(path_arg, choice_file)
 
     if screen_arg >= 0:
-        test_window(choice_file,screen_arg)
+        test_window(screen_arg)
     exit(1)
