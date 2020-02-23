@@ -7,6 +7,9 @@ import re
 import sys
 import time
 
+path_arg,name_arg,screen_arg=None,"",-1
+
+
 
 def dependancy_check():
 
@@ -29,54 +32,91 @@ def test_select(p=None,n=""):
     choice_file = choice(final_list)
     return choice_file
 
-def test_launch(p,n):
-    window_name = n
-    if screen_arg >= 0:
-        window_name = str(screen_arg) + "_" + n
-    command = ["vlc", f'--video-title=multiplayer_{window_name}', f'{p}/{n}', "-I", "dummy"] 
-    print(command)
-    process = subprocess.Popen(command, stdout=subprocess.PIPE)
-    wmctrl_output = ""
-    while(f"multiplayer_{window_name}" not in wmctrl_output):
-        print(f"multiplayer_{window_name}",wmctrl_output)
-        time.sleep(1)
-        wmctrl_output = str(subprocess.check_output(["wmctrl","-l"]))
+def test_resize(n,s):
+    screen_wait,resolution_string = True,""
 
-def test_window(s):
     command_1 = ['xrandr']
     command_2 = ['grep', '*']
-    p = subprocess.Popen(command_1, stdout=subprocess.PIPE)
-    p2 = subprocess.Popen(command_2, stdin=p.stdout, stdout=subprocess.PIPE)
-    p.stdout.close()
-    resolution_string, junk = p2.communicate()
+    try: 
+        p = subprocess.Popen(command_1, stdout=subprocess.PIPE)
+        p2 = subprocess.Popen(command_2, stdin=p.stdout, stdout=subprocess.PIPE)
+        p.stdout.close()
+        resolution_string, junk = p2.communicate()
+    except:
+        pass
+    finally:
+        p.terminate()
+        p2.terminate()
     resolution = resolution_string.split()[0]
     width, height = str(resolution).strip("b'").split('x')
-
-    command_3 = ["wmctrl","-r","multiplayer_" + str(s), "-e"]
+    print("RESIZE METHOD")
+    print(n)
+    command_3 = []
     #Offset values (added/subtracted from each _window and _pos variable) may need to be manually tweaked
     x_window, x_pos = (int(width) // 2 ) - 1, (int(width) // 2) + 11
     y_window, y_pos = (int(height) //2 ) - 35 , (int(height) // 2) - 5
     if s == 0:
-        command_3 += [f"0,0,0,{(x_window) * 2},{(y_window) * 2}"]
+        command_3 = [f"0,0,0,{(x_window) * 2},{(y_window) * 2}"]
     elif s == 1:
-        command_3 += [f"0,0,0,{(x_window) * 2},{y_window}"]
+        command_3 = [f"0,0,0,{(x_window) * 2},{y_window}"]
     elif s == 2:
-        command_3 += [f"0,0,{y_pos},{(x_window) * 2},{y_window}"]
+        command_3 = [f"0,0,{y_pos},{(x_window) * 2},{y_window}"]
     elif s == 3:
-        command_3 += [f"0,0,0,{(x_window)},{y_window * 2}"]
+        command_3 = [f"0,0,0,{(x_window)},{y_window * 2}"]
     elif s == 4:
-        command_3 += [f"0,{x_pos},0,{(x_window)},{y_window * 2}"]
+        command_3 = [f"0,{x_pos},0,{(x_window)},{y_window * 2}"]
     elif s == 5:
-        command_3 += [f"0,0,0,{x_window},{y_window}"]
+        command_3 = [f"0,0,0,{x_window},{y_window}"]
     elif s == 6:
-        command_3 += [f"0,{x_pos},0,{x_window},{y_window}"]
+        command_3 = [f"0,{x_pos},0,{x_window},{y_window}"]
     elif s == 7:
-        command_3 += [f"0,0,{y_pos},{x_window},{y_window}"]
+        command_3 = [f"0,0,{y_pos},{x_window},{y_window}"]
     elif s == 8:
-        command_3 += [f"0,{x_pos},{y_pos},{x_window},{y_window}"]
+        command_3 = [f"0,{x_pos},{y_pos},{x_window},{y_window}"]
 
-    process_3 = subprocess.Popen(command_3, stdout=subprocess.PIPE)
-        
+    wmctrl_output = ""
+    while(screen_wait):
+        wmctrl_output = str(subprocess.check_output(["wmctrl","-l"]))[2:-1]
+        if n in wmctrl_output:
+            screen_wait = False
+        time.sleep(0.5)
+
+    window_id = ""
+    for i in wmctrl_output.split('\\n'):
+        if n in i:
+            window_id = i[:10]
+            break
+    
+    command_3 = ["wmctrl","-i","-r",window_id, "-e"] + command_3
+
+
+    try:
+        process_3 = subprocess.Popen(command_3, stdout=subprocess.PIPE)
+    except:
+        pass
+    finally:
+        print("PROCESS 3 finished")
+
+def test_launch(p,n,s):
+    kill_string = None
+    if f'MULTIPLAYER_{s}' in os.environ.keys():
+        pass
+    print(n)
+    command = ["vlc", f'{p}{n}', '--play-and-exit', '--no-fullscreen'] 
+    n = str(n.encode("utf-8"))[2:-1]
+    try:
+        process = subprocess.Popen(command, stdout=subprocess.PIPE)
+        os.environ[f'MULTIPLAYER_{s}'] = n
+        if s != None:
+            test_resize(n,s)
+        while(True):
+            time.sleep(20)
+
+    except:
+        pass
+    finally:
+        process.terminate()
+
 if __name__ == "__main__":
 
     dependancy_check()
@@ -86,10 +126,6 @@ if __name__ == "__main__":
     for i in sys.argv[1:]:
         if "-p=" in i[:3]:
             path_arg = i[3:]
-        elif "-a" in i[:2]:
-            audio_arg = True
-        elif "-v" in i[:2]:
-            video_arg = True
         elif "-n=" in i[:3]:
             name_arg = i[3:]
         elif ("-h" in i[:2]):
@@ -110,8 +146,6 @@ if __name__ == "__main__":
             exit(0)
 
     choice_file = test_select(path_arg,name_arg)
-    test_launch(path_arg, choice_file)
+    test_launch(path_arg, choice_file, screen_arg)
 
-    if screen_arg >= 0:
-        test_window(screen_arg)
     exit(1)
