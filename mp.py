@@ -10,6 +10,30 @@ import time
 path_arg,name_arg,screen_arg=None,"",-1
 
 
+def instance_writer(screen,name):
+    with open(f'.cache/MULTIPLAYER_{screen}', 'w') as f:
+        f.write(name)
+
+
+def instance_terminator(screen):
+    instance = ""
+    if os.path.isdir(".cache"):
+        if os.path.isfile(f'.cache/MULTIPLAYER_{screen}'):
+            with open(f'.cache/MULTIPLAYER_{screen}', 'r') as f:
+                instance = f.read()
+            print(f"File read {screen}")
+        else:
+            return
+    else:
+        os.mkdir(".cache")
+        print("Dir created")
+        return
+    command_1 = ["pkill", "-f", f"'{instance}'"]
+
+    p = subprocess.Popen(command_1, stdout=subprocess.PIPE)
+    print(" ".join(command_1))
+
+
 
 def dependancy_check():
 
@@ -119,6 +143,7 @@ def test_launch(p,n,s):
 
 if __name__ == "__main__":
 
+
     dependancy_check()
 
     path_arg,name_arg,screen_arg=None,"",-1
@@ -129,10 +154,9 @@ if __name__ == "__main__":
         elif "-n=" in i[:3]:
             name_arg = i[3:]
         elif ("-h" in i[:2]):
-            f = open('help.txt', 'r')
-            file_contents = f.read()
-            print (file_contents)
-            f.close()
+            with open('help.txt', 'r') as f:
+                file_contents = f.read()
+                print (file_contents)
             exit(1)
         elif ("-s=" in i[:3]):
             print(i[3])
@@ -145,7 +169,9 @@ if __name__ == "__main__":
             print('Unrecognized Command: Enter -h as an arg to see help text' )
             exit(0)
 
+    instance_terminator(screen_arg)
     choice_file = test_select(path_arg,name_arg)
+    instance_writer(screen_arg,choice_file)
     test_launch(path_arg, choice_file, screen_arg)
 
     exit(1)
